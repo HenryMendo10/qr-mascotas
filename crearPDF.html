@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar PDF con jsPDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+    <header>
+        <nav>
+            <section class="contenedor nav">
+                <div class="logo">
+                    <img src="img/" alt="">
+                </div>
+                <div class="enlaces-header">
+                    <a href="index.html">Inicio</a>
+                    <a href="crearPDF.html">Crear PDF</a>
+                    <a href="crearQR.html">Crear QR</a>
+                </div>
+                <div class="hamburguer">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </section>
+        </nav>
+
+    </header>
+
+    <h1>Crear Archivo PDF de la Mascota</h1>
+    
+    <input type="text" placeholder="Nombre de la mascota" id="nombre-mascota"><br><br>
+    <input type="text" placeholder="Nombre del dueño" id="nombre-dueno"><br><br>
+    <input type="text" placeholder="WhatsApp" id="whatsapp"><br><br>
+    <input type="text" placeholder="Gmail" id="gmail"><br><br>
+    <input type="text" placeholder="Instagram" id="instagram"><br><br>
+    
+    <label>Cualidades:</label><br>
+    <input type="text" placeholder="Cualidad 1" id="cualidad-1"><br>
+    <input type="text" placeholder="Cualidad 2" id="cualidad-2"><br>
+    <input type="text" placeholder="Cualidad 3" id="cualidad-3"><br>
+    <input type="text" placeholder="Cualidad 4" id="cualidad-4"><br>
+    <input type="text" placeholder="Cualidad 5" id="cualidad-5"><br>
+    <input type="text" placeholder="Cualidad 6" id="cualidad-6"><br><br>
+
+    <label>Sube la imagen 1 de la mascota:</label>
+    <input type="file" id="imagen-1"><br><br>
+    
+    <label>Sube la imagen 2 de la mascota:</label>
+    <input type="file" id="imagen-2"><br><br>
+    
+    <button onclick="genPDF()">Crear PDF</button>
+
+    <script type="text/javascript">
+        function genPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Cargar fondo predeterminado
+            const fondoPantalla = '/fondo-pantalla.png';
+
+            // Obtener datos ingresados por el usuario
+            const nombreMascota = document.getElementById('nombre-mascota').value;
+            const nombreDueno = document.getElementById('nombre-dueno').value;
+            const whatsapp = document.getElementById('whatsapp').value;
+            const gmail = document.getElementById('gmail').value;
+            const instagram = document.getElementById('instagram').value;
+            
+            const cualidades = [
+                document.getElementById('cualidad-1').value,
+                document.getElementById('cualidad-2').value,
+                document.getElementById('cualidad-3').value,
+                document.getElementById('cualidad-4').value,
+                document.getElementById('cualidad-5').value,
+                document.getElementById('cualidad-6').value
+            ];
+
+            // Función para convertir la imagen seleccionada a base64
+            function getBase64(file, callback) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    callback(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Obtener imágenes y generar el PDF
+            const imagen1 = document.getElementById('imagen-1').files[0];
+            const imagen2 = document.getElementById('imagen-2').files[0];
+
+            if (imagen1 && imagen2) {
+                getBase64(imagen1, function(img1Data) {
+                    getBase64(imagen2, function(img2Data) {
+                        // Fondo (imagen predeterminada)
+                        doc.addImage(fondoPantalla, 'PNG', 0, 0, 210, 297);
+
+                        // Texto de bienvenida y descripción a la izquierda, imagen-1 a la derecha
+                        doc.setFontSize(16);
+                        doc.setTextColor(255, 255, 255);
+                        doc.text(`Hola! Soy ${nombreDueno}`, 35, 38);
+                        doc.setFontSize(12);
+                        doc.text(`${nombreMascota} es un perro muy amigable, pero puede`, 33, 50);
+                        doc.text("estar asustado.", 33, 60);
+                        doc.text("¡Por favor, contáctame si lo encuentras!", 33, 70);
+                        doc.addImage(img1Data, 'JPEG', 130, 32, 50, 50);
+
+                        // Nombre de la mascota centrado
+                        doc.setFontSize(20);
+                        doc.setTextColor(0, 0, 0);
+                        
+                        // Sección de contacto centrada
+                        doc.setFontSize(18);
+                        doc.setTextColor(255, 255, 255);
+                        doc.text("Contáctame", 105, 114, { align: "center" });
+
+                        doc.setFontSize(10);
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(`${whatsapp}`, 65, 140, { align: "center" });
+                        doc.text(`${gmail}`, 103, 140, { align: "center" });
+                        doc.text(`${instagram}`, 145, 140, { align: "center" });
+
+                        doc.setFontSize(18);
+                        doc.setTextColor(255, 255, 255);
+                        doc.text(`Hola! Soy ${nombreMascota}`, 105, 180, { align: "center" });
+
+                        // Imagen-2 con cualidades a los costados
+                        doc.addImage(img2Data, 'JPEG', 85, 200, 40, 70);
+                        const cualidadSpacing = 12;  // Ajuste de espacio entre cualidades
+                        cualidades.slice(0, 3).forEach((cualidad, index) => {
+                            doc.text(cualidad, 30, 210 + index * cualidadSpacing);
+                        });
+                        cualidades.slice(3, 6).forEach((cualidad, index) => {
+                            doc.text(cualidad, 140, 210 + index * cualidadSpacing);
+                        });
+
+                        // Guardar el PDF
+                        const pdfName = `${nombreMascota}_Info.pdf`;
+                        doc.save(pdfName);
+                    });
+                });
+            } else {
+                alert("Por favor, selecciona ambas imágenes.");
+            }
+        }
+        
+    </script>
+</body>
+</html>
